@@ -1,0 +1,43 @@
+<svg width="680" height="300" viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Dakar Rally 2026 stage-by-stage format</title>
+<desc>Six-step timeline: Prologue, Stages 1 to 3, Marathon stage 4-5, Rest day in Riyadh, Marathon stage 9-10, Finish at Stage 13.</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+<rect width="680" height="300" fill="#FFFFFF"/>
+
+<rect x="40" y="60" width="180" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.5"/>
+<text x="130" y="82" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="600" fill="#2C2C2A">Prologue</text>
+<text x="130" y="100" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#5F5E5A">Sets start order</text>
+
+<rect x="240" y="60" width="180" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.5"/>
+<text x="330" y="82" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="600" fill="#2C2C2A">Stages 1 to 3</text>
+<text x="330" y="100" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#5F5E5A">Yanbu into the interior</text>
+
+<rect x="440" y="60" width="180" height="56" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="1"/>
+<text x="530" y="82" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="600" fill="#412402">Marathon stage 4-5</text>
+<text x="530" y="100" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#854F0B">No outside support</text>
+
+<line x1="220" y1="88" x2="238" y2="88" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="420" y1="88" x2="438" y2="88" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M530 116 L530 150 L130 150 L130 178" fill="none" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<rect x="40" y="180" width="180" height="56" rx="8" fill="#E1F5EE" stroke="#0F6E56" stroke-width="0.5"/>
+<text x="130" y="202" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="600" fill="#04342C">Rest day - Riyadh</text>
+<text x="130" y="220" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#0F6E56">Halfway, no racing</text>
+
+<rect x="240" y="180" width="180" height="56" rx="8" fill="#FAEEDA" stroke="#BA7517" stroke-width="1"/>
+<text x="330" y="202" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="600" fill="#412402">Marathon stage 9-10</text>
+<text x="330" y="220" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#854F0B">Wadi Dawasir to Bisha</text>
+
+<rect x="440" y="180" width="180" height="56" rx="8" fill="#F1EFE8" stroke="#888780" stroke-width="0.5"/>
+<text x="530" y="202" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="600" fill="#2C2C2A">Finish - Stage 13</text>
+<text x="530" y="220" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#5F5E5A">Winner by total time</text>
+
+<line x1="220" y1="208" x2="238" y2="208" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+<line x1="420" y1="208" x2="438" y2="208" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+<text x="340" y="270" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" fill="#5F5E5A">Amber = marathon stages, self-service only. Teal = rest day.</text>
+</svg>
