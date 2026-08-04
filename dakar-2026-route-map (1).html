@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dakar 2026 — Route Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night:#10161f;
+    --night-2:#182231;
+    --dune:#c9a876;
+    --rally-red:#d64933;
+    --sun:#e8b84b;
+    --paper:#f4efe4;
+    --ink:#1b2430;
+    --ink-soft:#5b6472;
+    --line:rgba(244,239,228,0.14);
+    --line-strong:rgba(244,239,228,0.28);
+  }
+  .dakar2026-embed, .dakar2026-embed *{box-sizing:border-box;}
+  .dakar2026-embed{
+    background:var(--night);
+    color:var(--paper);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    margin:0;
+    display:block;
+  }
+  /* Most WordPress themes apply img{max-width:100%;height:auto} globally,
+     which breaks Leaflet's tile positioning. Force Leaflet's own rules to win. */
+  .dakar2026-embed .leaflet-container img{
+    max-width:none !important;
+    max-height:none !important;
+  }
+  .dakar2026-embed .leaflet-container{
+    max-width:none;
+  }
+  .dakar-wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:22px 18px 30px;
+  }
+  .dakar-header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:16px;
+  }
+  .dakar-title{
+    font-family:'Oswald', sans-serif;
+    font-weight:700;
+    font-size:clamp(24px,3.4vw,36px);
+    letter-spacing:0.02em;
+    text-transform:uppercase;
+    margin:0;
+    line-height:1.05;
+  }
+  .dakar-title span{color:var(--rally-red);}
+  .dakar-sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    color:var(--dune);
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    margin-top:6px;
+  }
+  .odometer{
+    text-align:right;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .odometer .num{
+    font-size:26px;
+    font-weight:600;
+    color:var(--sun);
+  }
+  .odometer .lbl{
+    font-size:10.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    color:#9aa3af;
+  }
+  .progress-track{
+    height:4px;
+    background:var(--line);
+    border-radius:2px;
+    margin:14px 0 4px;
+    position:relative;
+    overflow:hidden;
+  }
+  .progress-fill{
+    position:absolute;
+    left:0;top:0;bottom:0;
+    background:linear-gradient(90deg,var(--rally-red),var(--sun));
+    border-radius:2px;
+    transition:width .4s ease;
+  }
+  .tabs-scroll{
+    display:flex;
+    gap:6px;
+    overflow-x:auto;
+    padding:14px 0 18px;
+    scrollbar-width:thin;
+    scrollbar-color:var(--line-strong) transparent;
+  }
+  .tabs-scroll::-webkit-scrollbar{height:5px;}
+  .tabs-scroll::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:3px;}
+  .day-tab{
+    flex:0 0 auto;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    font-weight:500;
+    background:var(--night-2);
+    color:#c7cdd6;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 12px;
+    cursor:pointer;
+    white-space:nowrap;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    transition:all .15s ease;
+    line-height:1.3;
+  }
+  .day-tab .d1{font-size:10px;letter-spacing:.06em;color:#7d8794;text-transform:uppercase;}
+  .day-tab .d2{font-family:'Oswald',sans-serif;font-size:13px;text-transform:uppercase;color:inherit;}
+  .day-tab:hover{border-color:var(--line-strong);}
+  .day-tab.active{
+    background:var(--rally-red);
+    border-color:var(--rally-red);
+    color:#fff;
+  }
+  .day-tab.active .d1{color:rgba(255,255,255,0.75);}
+  .day-tab.rest{border-style:dashed;}
+  .day-tab.rest .d2{color:var(--sun);}
+  .day-tab.rest.active .d2{color:#fff;}
+
+  .panel{
+    display:grid;
+    grid-template-columns:1.55fr 1fr;
+    gap:16px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    background:var(--night-2);
+  }
+  #map{
+    width:100%;
+    height:460px;
+    background:#0c121a;
+  }
+  .leaflet-container{font-family:'IBM Plex Sans',sans-serif;}
+  .info-card{
+    padding:20px 22px 22px;
+    background:var(--paper);
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    min-height:460px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--rally-red);
+    font-weight:600;
+    margin-bottom:8px;
+  }
+  .stage-title{
+    font-family:'Oswald', sans-serif;
+    font-size:26px;
+    font-weight:600;
+    text-transform:uppercase;
+    line-height:1.08;
+    margin:0 0 6px;
+  }
+  .stage-route{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13.5px;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+  .stage-route b{color:var(--ink);}
+  .stat-row{
+    display:flex;
+    gap:10px;
+    margin-bottom:16px;
+    flex-wrap:wrap;
+  }
+  .stat{
+    flex:1 1 80px;
+    background:rgba(27,36,48,0.05);
+    border:1px solid rgba(27,36,48,0.12);
+    border-radius:8px;
+    padding:8px 10px;
+  }
+  .stat .v{font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;color:var(--ink);}
+  .stat .k{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-top:2px;}
+  .desc{
+    font-size:14.5px;
+    line-height:1.55;
+    color:var(--ink);
+    margin-bottom:14px;
+  }
+  .badges{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-bottom:auto;
+    padding-bottom:14px;
+  }
+  .badge{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:4px 9px;
+    border-radius:100px;
+    border:1px solid rgba(27,36,48,0.18);
+    color:var(--ink-soft);
+  }
+  .badge.hot{background:var(--rally-red);color:#fff;border-color:var(--rally-red);}
+  .badge.sun{background:var(--sun);color:#221a06;border-color:var(--sun);}
+  .roadbook{
+    border-top:1px dashed rgba(27,36,48,0.25);
+    padding-top:12px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+  }
+  .roadbook b{color:var(--ink);}
+
+  .marker-pin{
+    width:26px;height:26px;border-radius:50% 50% 50% 0;
+    background:var(--rally-red);
+    border:2px solid #fff;
+    transform:rotate(-45deg);
+    box-shadow:0 2px 6px rgba(0,0,0,.4);
+  }
+  .marker-pin.past{background:#7d8794;}
+  .marker-pin.rest{background:var(--sun);}
+  .marker-label{
+    transform:rotate(45deg);
+    color:#fff;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    height:100%;
+  }
+  .leaflet-popup-content-wrapper{
+    background:var(--night-2);color:var(--paper);border-radius:8px;
+    font-family:'IBM Plex Sans',sans-serif;
+  }
+  .leaflet-popup-tip{background:var(--night-2);}
+  .leaflet-popup-content b{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.02em;}
+
+  @media (max-width:760px){
+    .panel{grid-template-columns:1fr;}
+    #map{height:320px;}
+    .info-card{min-height:auto;}
+    .dakar-header{align-items:flex-start;}
+    .odometer{text-align:left;}
+  }
+</style>
+</head>
+<body>
+
+<div class="dakar2026-embed">
+<div class="dakar-wrap">
+
+  <div class="dakar-header">
+    <div>
+      <h1 class="dakar-title">Dakar <span>2026</span> — Saudi Arabia</h1>
+      <div class="dakar-sub">Jan 3 – Jan 17 · Yanbu to Yanbu · Prologue + 13 stages</div>
+    </div>
+    <div class="odometer">
+      <div class="num" id="odo-num">0 km</div>
+      <div class="lbl">Race distance to date</div>
+    </div>
+  </div>
+
+  <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+  <div class="tabs-scroll" id="tabs"></div>
+
+  <div class="panel">
+    <div id="map"></div>
+    <div class="info-card" id="info-card"></div>
+  </div>
+
+</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ---------------- Route data (dates: Jan 2026, Saudi Arabia) ---------------- */
+const STAGES = [
+  {id:0, kind:'prologue', label:'Prologue', date:'Jan 3', from:'Yanbu', to:'Yanbu',
+   loc:[24.0895,38.0618], liaison:67, special:25,
+   terrain:['Gravel','Hills'],
+   desc:"The rally opens with a short qualifying loop around Yanbu that sets the running order for Stage 1. Organisers flagged tricky hillside tracks and loose gravel right from the first kilometre."},
+
+  {id:1, kind:'stage', label:'Stage 1', date:'Jan 4', from:'Yanbu', to:'Yanbu',
+   loc:[24.0895,38.0618], liaison:214, special:304,
+   terrain:['Rock','Sand'],
+   desc:"A full day out of the Red Sea coast bivouac, running through rocky ground before a mid-stage pit stop, then closing on softer sand as the first small dunes of the rally appear."},
+
+  {id:2, kind:'stage', label:'Stage 2', date:'Jan 5', from:'Yanbu', to:'AlUla',
+   loc:[26.6081,37.9207], liaison:104, special:400,
+   terrain:['Mountain','Fast track'],
+   desc:"The convoy turns inland toward the mountains, alternating fast trail sections with rocky climbs before a second pit stop. Average speeds swing widely across a hilly closing section into AlUla."},
+
+  {id:3, kind:'stage', label:'Stage 3', date:'Jan 6', from:'AlUla', to:'AlUla',
+   loc:[26.6081,37.9207], liaison:244, special:421,
+   terrain:['Sand flats','Navigation'],
+   desc:"A navigation-heavy loop around AlUla where reading the roadbook matters as much as speed, as the ground shifts from broken rock to open sand flats with few fixed landmarks."},
+
+  {id:4, kind:'marathon', label:'Stage 4', date:'Jan 7', from:'AlUla', to:'AlUla', note:'Marathon (1/2)',
+   loc:[26.6081,37.9207], liaison:75, special:451,
+   terrain:['Sand','Marathon'],
+   desc:"Day one of the first marathon stage. Crews finish in AlUla with only basic tools on hand and sleep out at a bare-bones bivouac, with no outside assistance permitted overnight."},
+
+  {id:5, kind:'marathon', label:'Stage 5', date:'Jan 8', from:'AlUla', to:'Hail', note:'Marathon (2/2)',
+   loc:[27.5114,41.6900], liaison:61, special:356,
+   terrain:['Sand','Rock'],
+   desc:"The marathon continues on toward Hail, with cars and bikes routed separately so cars can't lean on motorcycle tracks through the sand. Careful navigation through rock and dune matters more than raw pace."},
+
+  {id:6, kind:'stage', label:'Stage 6', date:'Jan 9', from:'Hail', to:'Riyadh', note:'Longest stage',
+   loc:[24.7136,46.6753], liaison:589, special:331,
+   terrain:['Dunes','Qassim region'],
+   desc:"The longest day of Dakar 2026, crossing the dune fields of the Qassim region before a long liaison run into the capital, Riyadh, and the rally's only rest day."},
+
+  {id:7, kind:'rest', label:'Rest Day', date:'Jan 10', from:'Riyadh', to:'Riyadh',
+   loc:[24.7136,46.6753], liaison:0, special:0,
+   terrain:['Service','Recovery'],
+   desc:"Halfway point of the rally. Teams use the day in Riyadh for vehicle repairs, medical checks and rest before the second, more punishing week begins."},
+
+  {id:8, kind:'stage', label:'Stage 7', date:'Jan 11', from:'Riyadh', to:'Wadi Ad-Dawasir',
+   loc:[20.4700,44.7908], liaison:418, special:459,
+   terrain:['Sand dunes'],
+   desc:"Coming out of the rest day, the route heads south into varied dune terrain toward Wadi Ad-Dawasir, a region that rewards a measured, controlled pace over early aggression."},
+
+  {id:9, kind:'stage', label:'Stage 8', date:'Jan 12', from:'Wadi Ad-Dawasir', to:'Wadi Ad-Dawasir',
+   loc:[20.4700,44.7908], liaison:226, special:470,
+   terrain:['Deep dunes'],
+   desc:"A full loop through one of Saudi Arabia's largest dune regions, with long dune lines and broad valleys that keep the pace steady but leave little room for navigation mistakes."},
+
+  {id:10, kind:'marathon', label:'Stage 9', date:'Jan 13', from:'Wadi Ad-Dawasir', to:'Bisha', note:'Marathon (1/2)',
+   loc:[19.9821,42.6045], liaison:118, special:420,
+   terrain:['Dunes','Marathon'],
+   desc:"Start of the second marathon phase. Competitors push on toward Bisha with a minimal overnight bivouac, forming the core of the rally's second endurance test."},
+
+  {id:11, kind:'marathon', label:'Stage 10', date:'Jan 14', from:'Bisha', to:'Bisha', note:'Marathon (2/2)',
+   loc:[19.9821,42.6045], liaison:5, special:466,
+   terrain:['Navigation'],
+   desc:"The marathon closes with a short liaison and a long special back into Bisha, where the main difficulty comes from reading the terrain correctly rather than outright speed."},
+
+  {id:12, kind:'stage', label:'Stage 11', date:'Jan 15', from:'Bisha', to:'Al Henakiyah', note:'Defining leg',
+   loc:[24.8730,40.5185], liaison:510, special:347,
+   terrain:['Canyons','Hidden tracks'],
+   desc:"Widely seen as one of the toughest legs of the rally: complex canyons, hidden tracks and dense intersections that put the roadbook to a serious test on the way to Al Henakiyah."},
+
+  {id:13, kind:'stage', label:'Stage 12', date:'Jan 16', from:'Al Henakiyah', to:'Yanbu',
+   loc:[24.0895,38.0618], liaison:408, special:310,
+   terrain:['Fast track','Technical'],
+   desc:"The push back toward the coast, mixing fast open sections with technical stretches as the field closes in on Yanbu for the final day."},
+
+  {id:14, kind:'final', label:'Stage 13', date:'Jan 17', from:'Yanbu', to:'Yanbu', note:'Final podium',
+   loc:[24.0895,38.0618], liaison:36, special:99,
+   terrain:['Power stage'],
+   desc:"A short closing loop back on the Red Sea coast. Even on the last day there's a competitive power-stage section that can still shuffle the final standings before the finish podium in Yanbu."},
+];
+
+const TOTAL_KM = STAGES.reduce((s,x)=>s+x.liaison+x.special,0);
+
+/* ---------------- Map setup ---------------- */
+const map = L.map('map', {scrollWheelZoom:false, zoomControl:true}).setView([23.5,42.5], 5.4);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution:'&copy; OpenStreetMap contributors &copy; CARTO',
+  maxZoom:12
+}).addTo(map);
+
+function pinIcon(cls, txt){
+  return L.divIcon({
+    className:'',
+    html:`<div class="marker-pin ${cls}"><div class="marker-label">${txt}</div></div>`,
+    iconSize:[26,26],
+    iconAnchor:[13,26],
+    popupAnchor:[0,-24]
+  });
+}
+
+// unique locations in order, for the connecting route line
+const routeLine = L.polyline(STAGES.map(s=>s.loc), {
+  color:'#7d8794', weight:2, opacity:0.5, dashArray:'4,5'
+}).addTo(map);
+
+const traveledLine = L.polyline([], {color:'#d64933', weight:3, opacity:0.9}).addTo(map);
+
+const markers = STAGES.map((s,i)=>{
+  const isRest = s.kind==='rest';
+  const m = L.marker(s.loc, {icon: pinIcon(isRest?'rest':'past', isRest?'★':String(i))}).addTo(map);
+  m.bindPopup(`<b>${s.label}${isRest? '':''}</b><br>${s.from} → ${s.to}<br>${s.date}`);
+  m.on('click', ()=>selectDay(s.id));
+  return m;
+});
+
+/* ---------------- Tabs ---------------- */
+const tabsEl = document.getElementById('tabs');
+STAGES.forEach(s=>{
+  const el = document.createElement('div');
+  el.className = 'day-tab' + (s.kind==='rest' ? ' rest':'');
+  el.dataset.id = s.id;
+  el.innerHTML = `<span class="d1">${s.date}</span><span class="d2">${s.kind==='rest'?'Rest':s.label}</span>`;
+  el.addEventListener('click', ()=>selectDay(s.id));
+  tabsEl.appendChild(el);
+});
+
+/* ---------------- Info card + selection ---------------- */
+function kindLabel(s){
+  if(s.kind==='rest') return 'Rest Day';
+  if(s.kind==='prologue') return 'Prologue';
+  if(s.kind==='marathon') return 'Marathon Stage';
+  if(s.kind==='final') return 'Final Stage';
+  return 'Stage';
+}
+
+function renderInfo(s){
+  const total = s.liaison + s.special;
+  const badges = s.terrain.map(t=>`<span class="badge">${t}</span>`).join('');
+  const noteBadge = s.note ? `<span class="badge hot">${s.note}</span>` : '';
+  const restBadge = s.kind==='rest' ? `<span class="badge sun">Rest Day</span>` : '';
+  document.getElementById('info-card').innerHTML = `
+    <div class="eyebrow">${kindLabel(s)} · ${s.date}</div>
+    <h2 class="stage-title">${s.label}${s.kind!=='rest' ? '' : ''}</h2>
+    <div class="stage-route">${s.from} <b>&rarr;</b> ${s.to}</div>
+    ${s.kind==='rest' ? '' : `
+    <div class="stat-row">
+      <div class="stat"><div class="v">${s.liaison}</div><div class="k">Liaison km</div></div>
+      <div class="stat"><div class="v">${s.special}</div><div class="k">Special km</div></div>
+      <div class="stat"><div class="v">${total}</div><div class="k">Total km</div></div>
+    </div>`}
+    <div class="desc">${s.desc}</div>
+    <div class="badges">${noteBadge}${restBadge}${badges}</div>
+    <div class="roadbook"><span>Day <b>${s.id+1}</b> / ${STAGES.length}</span><span>${s.from==s.to? 'Loop stage' : 'Point-to-point'}</span></div>
+  `;
+}
+
+function selectDay(id){
+  document.querySelectorAll('.day-tab').forEach(t=> t.classList.toggle('active', Number(t.dataset.id)===id));
+  const s = STAGES[id];
+  renderInfo(s);
+
+  markers.forEach((m,i)=>{
+    const st = STAGES[i];
+    const isRest = st.kind==='rest';
+    let cls = isRest ? 'rest' : (i<=id ? (i===id?'':'past') : 'past');
+    if(i===id) cls = isRest ? 'rest' : '';
+    m.setIcon(pinIcon(cls, isRest?'★':String(i)));
+  });
+
+  traveledLine.setLatLngs(STAGES.slice(0,id+1).map(s=>s.loc));
+  map.flyTo(s.loc, s.kind==='rest'?6.2:6, {duration:0.6});
+
+  const kmSoFar = STAGES.slice(0,id+1).reduce((sum,x)=>sum+x.liaison+x.special,0);
+  document.getElementById('odo-num').textContent = kmSoFar.toLocaleString()+' km';
+  document.getElementById('progress-fill').style.width = ((kmSoFar/TOTAL_KM)*100).toFixed(1)+'%';
+
+  const activeTab = document.querySelector('.day-tab.active');
+  if(activeTab) activeTab.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+}
+
+selectDay(0);
+
+// WordPress often inserts this widget into a container that's still animating
+// or resizing when the map first paints, which leaves Leaflet with a stale
+// size. Nudge it to recalculate a few times just after load.
+setTimeout(()=>map.invalidateSize(), 150);
+setTimeout(()=>map.invalidateSize(), 600);
+window.addEventListener('resize', ()=>map.invalidateSize());
+</script>
+</body>
+</html>
